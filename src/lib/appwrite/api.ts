@@ -113,8 +113,8 @@ export async function signOutAccount() {
 
 
 
-export async function createNewPost(post : INewPost){
-    try{
+export async function createNewPost(post: INewPost) {
+    try {
         //upload the file into storage
         const uploadedFile = await uploadFile(post.file[0])
 
@@ -124,13 +124,13 @@ export async function createNewPost(post : INewPost){
         const fileUrl = await getFilePreview(uploadedFile.$id)
 
         //If file is corrupted then delete file from storage
-        if(!fileUrl){
+        if (!fileUrl) {
             await deleteFile(uploadedFile.$id)
             throw Error
         }
 
         //sort the tags
-        const tags = post.tags?.replace(/ /g,'').split(',') || []
+        const tags = post.tags?.replace(/ /g, '').split(',') || []
 
         //create Post
         const newPost = await databases.createDocument(
@@ -147,32 +147,32 @@ export async function createNewPost(post : INewPost){
             }
 
         )
-        if (!newPost){
+        if (!newPost) {
             await deleteFile(uploadedFile.$id)
             throw Error
         }
         return newPost
 
 
-    }catch(err){
+    } catch (err) {
         console.log(err)
     }
 }
-export async function uploadFile(file : File) {
-    try{
-        const uploadedFile = await storage.createFile( 
+export async function uploadFile(file: File) {
+    try {
+        const uploadedFile = await storage.createFile(
             appwriteConfig.storageId,
             ID.unique(),
             file)
         return uploadedFile
-    }catch(error){
+    } catch (error) {
         console.log(error)
     }
-    
+
 }
 
-export async function getFilePreview(fileId: string){
-    try{
+export async function getFilePreview(fileId: string) {
+    try {
         const filePreview = await storage.getFilePreview(
             appwriteConfig.storageId,
             fileId,
@@ -183,21 +183,21 @@ export async function getFilePreview(fileId: string){
         )
 
         return filePreview
-    }catch(err){
+    } catch (err) {
         console.log(err)
     }
 }
-export async function deleteFile(fileUrl: string){
-    try{
+export async function deleteFile(fileUrl: string) {
+    try {
         storage.deleteFile(appwriteConfig.storageId, fileUrl)
-        return {status: 'ok'}
+        return { status: 'ok' }
     }
-    catch(error){
+    catch (error) {
         console.log(error)
     }
 }
 
-export async function getRecentPosts(){
+export async function getRecentPosts() {
     const posts = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.postCollectionId,
@@ -207,4 +207,61 @@ export async function getRecentPosts(){
     if (!posts) throw Error
 
     return posts
+}
+
+export async function likePost(postId: string, likesArray: string[]) {
+    try {
+
+        const updatedPost = await databases.updateDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.postCollectionId,
+            postId,
+            {
+                likes: likesArray
+            }
+
+        )
+        if (!updatedPost) throw Error
+        return updatedPost
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export async function savePost(postId: string, userId: string) {
+
+    try {
+
+        const updatedPost = await databases.createDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.saveCollectionId,
+            ID.unique(),
+            {
+                user: userId,
+                post: postId
+            }
+
+        )
+        if (!updatedPost) throw Error
+        return updatedPost
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export async function deleteSavedPost(savedRecordId: string) {
+
+    try {
+
+        const updatedPost = await databases.deleteDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.saveCollectionId,
+            savedRecordId
+
+        )
+        if (!updatedPost) throw Error
+        return {status: 'ok'}
+    } catch (err) {
+        console.log(err)
+    }
 }
