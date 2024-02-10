@@ -11,19 +11,22 @@ import { Models } from "appwrite"
 import { useNavigate } from "react-router-dom"
 import { useToast } from "../ui/use-toast"
 import { useUserContext } from "@/context/AuthContext"
-import { useCreatePost } from "@/lib/react-query/queriesAndMutattions"
+import { useCreatePost, useUpdatePost } from "@/lib/react-query/queriesAndMutattions"
+
 
 type PostFormProps = {
   post?: Models.Document;
+  action: `Create` | `Update`;
 }
 
-const  PostForm = ({ post }: PostFormProps) => {
+const PostForm = ({ post, action }: PostFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useUserContext();
   const { mutateAsync: createNewPost, isPending: isLoadingCreate } =
     useCreatePost();
-
+  const { mutateAsync: updatePost, isPending: isLoadingUpdate } =
+    useUpdatePost();
   const form = useForm<z.infer<typeof PostValidation>>({
     resolver: zodResolver(PostValidation),
     defaultValues: {
@@ -35,6 +38,20 @@ const  PostForm = ({ post }: PostFormProps) => {
   })
 
   async function onSubmit(values: z.infer<typeof PostValidation>) {
+    if (post && action === "Update") {
+      const updatedPost = await updatePost({
+        ...values,
+        postId: post.$id,
+        imageId: post?.imageId,
+        imageUrl: post?.imageUrl
+      })
+
+      if (!updatePost) {
+        toast({ title: "plesae try agian" })
+      }
+      return navigate(`/posts/${post.$id}`)
+    }
+
     const newPost = await createNewPost({
       ...values,
       userId: user.id,

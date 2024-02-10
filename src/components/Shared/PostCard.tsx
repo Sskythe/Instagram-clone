@@ -13,7 +13,7 @@ const PostCard = ({ post }: PostCardProp) => {
   const { user } = useUserContext();
   if (!post.creator) return null;
 
-
+console.log(post.$id)
   return (
     <div className='post-card'>
       <div className='flex-between'>
@@ -42,7 +42,7 @@ const PostCard = ({ post }: PostCardProp) => {
           </div>
         </div>
 
-        <Link to={'/update-post/${post.$id}'} className={`${user.id !== post.creator.$id && "hidden"}`}>
+        <Link to={`/update-post/${post.$id}`} className={`${user.id !== post.creator.$id && "hidden"}`}>
           <img src="/assets/icons/edit.svg" alt="edit" width={20} />
         </Link>
       </div>
